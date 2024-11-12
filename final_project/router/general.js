@@ -1,8 +1,13 @@
 const express = require('express');
-let books = require("./booksdb.js");
+
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
+let books = []
+let bookPromice = new Promise((resolve,reject) => {
+    resolve(books = require("./booksdb.js"));
+})
+
 
 // Check if a user with the given username already exists
 const doesExist = (username) => {
@@ -39,7 +44,11 @@ public_users.post("/register", (req,res) => {
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
-  let allBooks = books;
+  let allBooks = []
+  bookPromice.then(
+    allBooks = books
+  )
+  
   return res.status(300).json({message: JSON.stringify(allBooks)});
 });
 

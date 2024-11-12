@@ -9,25 +9,7 @@ const isValid = (username)=>{ //returns boolean
 //write code to check is the username is valid
 }
 
-// Middleware to authenticate requests to "/customer" endpoint
-app.use("/customer", function auth(req, res, next) {
-    // Check if user is logged in and has valid access token
-    if (req.session.authorization) {
-        let token = req.session.authorization['accessToken'];
 
-        // Verify JWT token
-        jwt.verify(token, "access", (err, user) => {
-            if (!err) {
-                req.user = user;
-                next(); // Proceed to the next middleware
-            } else {
-                return res.status(403).json({ message: "User not authenticated" });
-            }
-        });
-    } else {
-        return res.status(403).json({ message: "User not logged in" });
-    }
-});
 
 // Check if the user with the given username and password exists
 const authenticatedUser = (username, password) => {
@@ -74,16 +56,32 @@ regd_users.post("/login", (req, res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
-  console.log(req.session)
-  const username = req.session.authorization['username'];
-  
-  const reviews = books[req.params.isbn].reviews;
-  if (Object.keys(reviews).length < 0){
-    books[req.params.isbn].reviews= {username:req.query.review};
-  }else{
-    books[req.params.isbn].reviews[username]= req.query.review;
+  const isbn = req.params.isbn;
+  let filtered_book = books[isbn]
+  if (filtered_book) {
+      let review = req.query.review;
+      let reviewer = req.session.authorization['username'];
+      if(review) {
+          filtered_book['reviews'][reviewer] = review;
+          books[isbn] = filtered_book;
+      }
+      res.send(`The review for the book with ISBN  ${isbn} has been added/updated.`);
   }
-  return res.status(300).json({message: "Yet to be implemented"});
+  else{
+      res.send("Unable to find this ISBN!");
+  }
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const username = req.session.authorization['username'];
+    const reviews = books[req.params.isbn].reviews 
+    if(reviews){
+        delete books[req.params.isbn][username]
+
+    }
+    
+    return res.status(200).json({message: `The review for ${req.params.isbn} deleted`});
+
 });
 
 module.exports.authenticated = regd_users;
